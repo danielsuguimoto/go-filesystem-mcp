@@ -6,15 +6,36 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/danielsuguimoto/go-filesystem-mcp/config"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-func ReadFileHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+type ReadFileHandler struct {
+	cfg *config.Config
+}
+
+func NewReadFileHandler(cfg *config.Config) *ReadFileHandler {
+	return &ReadFileHandler{cfg: cfg}
+}
+
+func (h *ReadFileHandler) Handle(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	path, ok := request.Params.Arguments["path"].(string)
 	if !ok {
 		return nil, errors.New("invalid arguments for read_file")
+	}
+
+	// Convert to absolute path if not already
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("invalid path: %w", err)
+	}
+
+	// Check if path is allowed
+	if !h.cfg.IsPathAllowed(absPath) {
+		return nil, fmt.Errorf("path %q is outside of allowed directories", absPath)
 	}
 
 	var fromLine, toLine int64 = 0, -1
@@ -28,7 +49,7 @@ func ReadFileHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 	}
 
 	if fromLine > 0 || toLine >= 0 {
-		file, err := os.Open(path)
+		file, err := os.Open(absPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open file: %w", err)
 		}
@@ -49,20 +70,21 @@ func ReadFileHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Cal
 			if currentLine >= start && currentLine <= end {
 				lines = append(lines, scanner.Text())
 			}
+			currentLine++
 			if currentLine > end {
 				break
 			}
-			currentLine++
 		}
 		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("failed to scan file: %w", err)
+			return nil, fmt.Errorf("error reading file: %w", err)
 		}
 		return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
 	}
 
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(absPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
+
 	return mcp.NewToolResultText(string(content)), nil
 }

@@ -1,14 +1,30 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"strings"
 
+	"github.com/danielsuguimoto/go-filesystem-mcp/config"
 	"github.com/danielsuguimoto/go-filesystem-mcp/tool"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
 func main() {
+	// Parse allowed directories from command line
+	var allowedDirsFlag string
+	flag.StringVar(&allowedDirsFlag, "allowed-dirs", "", "Comma-separated list of allowed directories")
+	flag.Parse()
+
+	// Split and validate allowed directories
+	allowedDirs := strings.Split(allowedDirsFlag, ",")
+	cfg, err := config.NewConfig(allowedDirs)
+	if err != nil {
+		fmt.Printf("Configuration error: %v\n", err)
+		return
+	}
+
 	s := server.NewMCPServer(
 		"Filesystem MCP",
 		"1.0.0",
@@ -17,20 +33,20 @@ func main() {
 		server.WithRecovery(),
 	)
 
-	addTools(s)
+	addTools(s, cfg)
 
 	if err := server.ServeStdio(s); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }
 
-func addTools(s *server.MCPServer) {
-	addReadFileTool(s)
-	addReadMultipleFilesTool(s)
-	addCreateDirectoryTool(s)
+func addTools(s *server.MCPServer, cfg *config.Config) {
+	addReadFileTool(s, cfg)
+	addReadMultipleFilesTool(s, cfg)
+	addCreateDirectoryTool(s, cfg)
 }
 
-func addReadFileTool(s *server.MCPServer) {
+func addReadFileTool(s *server.MCPServer, cfg *config.Config) {
 	readFileTool := mcp.NewTool(
 		"read_file",
 		mcp.WithDescription("Read the contents of a file from the file system. You can specify optional from and to parameters to read a specific range of lines. If these are not provided, the complete file contents are returned. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Only works within allowed directories."),
@@ -49,10 +65,11 @@ func addReadFileTool(s *server.MCPServer) {
 		),
 	)
 
-	s.AddTool(readFileTool, tool.ReadFileHandler)
+	handler := tool.NewReadFileHandler(cfg)
+	s.AddTool(readFileTool, handler.Handle)
 }
 
-func addReadMultipleFilesTool(s *server.MCPServer) {
+func addReadMultipleFilesTool(s *server.MCPServer, cfg *config.Config) {
 	readMultipleFilesTool := mcp.NewTool(
 		"read_multiple_files",
 		mcp.WithDescription("Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories."),
@@ -66,7 +83,7 @@ func addReadMultipleFilesTool(s *server.MCPServer) {
 	s.AddTool(readMultipleFilesTool, tool.ReadMultipleFilesHandler)
 }
 
-func addCreateDirectoryTool(s *server.MCPServer) {
+func addCreateDirectoryTool(s *server.MCPServer, cfg *config.Config) {
 	createDirTool := mcp.NewTool(
 		"create_directory",
 		mcp.WithDescription("Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories."),
@@ -81,5 +98,6 @@ func addCreateDirectoryTool(s *server.MCPServer) {
 		),
 	)
 
-	s.AddTool(createDirTool, tool.CreateDirectoryHandler)
+	handler := tool.NewCreateDirectoryHandler(cfg)
+	s.AddTool(createDirTool, handler.Handle)
 }
