@@ -27,6 +27,7 @@ func main() {
 func addTools(s *server.MCPServer) {
 	addReadFileTool(s)
 	addReadMultipleFilesTool(s)
+	addCreateDirectoryTool(s)
 }
 
 func addReadFileTool(s *server.MCPServer) {
@@ -63,4 +64,22 @@ func addReadMultipleFilesTool(s *server.MCPServer) {
 	)
 
 	s.AddTool(readMultipleFilesTool, tool.ReadMultipleFilesHandler)
+}
+
+func addCreateDirectoryTool(s *server.MCPServer) {
+	createDirTool := mcp.NewTool(
+		"create_directory",
+		mcp.WithDescription("Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories."),
+		mcp.WithString(
+			"path",
+			mcp.Required(),
+			mcp.Description("The directory path to create. Must be an absolute path."),
+		),
+		mcp.WithString(
+			"recursive",
+			mcp.Description("Create parent directories if they don't exist. Default is 'true'."),
+		),
+	)
+
+	s.AddTool(createDirTool, tool.CreateDirectoryHandler)
 }
