@@ -1,0 +1,47 @@
+# Go
+*.exe
+*.test
+*.out
+*.so
+*.a
+*.o
+*.h
+*.pdb
+*.dll
+*.dylib
+
+# Binaries for programs and plugins
+bin/
+
+# Go build cache
+pkg/
+
+# Go modules
+dist/
+vendor/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test coverage
+cov.out
+coverage.txt
+
+# Configuration files
+.env
+.env.local
+.env.*.local
+
+go-filesystem-mcp
