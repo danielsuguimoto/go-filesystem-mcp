@@ -45,6 +45,7 @@ func addTools(s *server.MCPServer, cfg *config.Config) {
 	addReadMultipleFilesTool(s, cfg)
 	addCreateDirectoryTool(s, cfg)
 	addListDirectoryTool(s, cfg)
+	addDirectoryTreeTool(s, cfg)
 }
 
 func addReadFileTool(s *server.MCPServer, cfg *config.Config) {
@@ -116,4 +117,19 @@ func addListDirectoryTool(s *server.MCPServer, cfg *config.Config) {
 
 	handler := tool.NewListDirectoryHandler(cfg)
 	s.AddTool(listDirectoryTool, handler.Handle)
+}
+
+func addDirectoryTreeTool(s *server.MCPServer, cfg *config.Config) {
+	directoryTreeTool := mcp.NewTool(
+		"directory_tree",
+		mcp.WithDescription("Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories."),
+		mcp.WithString(
+			"path",
+			mcp.Required(),
+			mcp.Description("The directory path to get the tree structure for. Must be an absolute path to a directory that exists on the filesystem."),
+		),
+	)
+
+	handler := tool.NewDirectoryTreeHandler(cfg)
+	s.AddTool(directoryTreeTool, handler.Handle)
 }
