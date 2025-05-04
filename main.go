@@ -1,9 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"strings"
+	"os"
 
 	"github.com/danielsuguimoto/go-filesystem-mcp/config"
 	"github.com/danielsuguimoto/go-filesystem-mcp/tool"
@@ -12,13 +11,14 @@ import (
 )
 
 func main() {
-	// Parse allowed directories from command line
-	var allowedDirsFlag string
-	flag.StringVar(&allowedDirsFlag, "allowed-dirs", "", "Comma-separated list of allowed directories")
-	flag.Parse()
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: go-filesystem-mcp <directory> [additional_directories...]")
+		fmt.Println("Example: go-filesystem-mcp /path/to/project /path/to/another")
+		fmt.Println("\nAt least one directory must be specified to allow filesystem operations.")
+		return
+	}
 
-	// Split and validate allowed directories
-	allowedDirs := strings.Split(allowedDirsFlag, ",")
+	allowedDirs := os.Args[1:]
 	cfg, err := config.NewConfig(allowedDirs)
 	if err != nil {
 		fmt.Printf("Configuration error: %v\n", err)

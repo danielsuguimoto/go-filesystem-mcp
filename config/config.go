@@ -5,18 +5,15 @@ import (
 	"path/filepath"
 )
 
-// Config holds the MCP server configuration
 type Config struct {
 	AllowedDirectories []string
 }
 
-// NewConfig creates a new Config with validated allowed directories
 func NewConfig(dirs []string) (*Config, error) {
 	if len(dirs) == 0 {
 		return nil, fmt.Errorf("at least one allowed directory must be provided")
 	}
 
-	// Convert all paths to absolute and clean them
 	cleanDirs := make([]string, len(dirs))
 	for i, dir := range dirs {
 		absPath, err := filepath.Abs(dir)
@@ -31,7 +28,6 @@ func NewConfig(dirs []string) (*Config, error) {
 	}, nil
 }
 
-// IsPathAllowed checks if a given path is within any of the allowed directories
 func (c *Config) IsPathAllowed(path string) bool {
 	if !filepath.IsAbs(path) {
 		return false
@@ -39,8 +35,15 @@ func (c *Config) IsPathAllowed(path string) bool {
 
 	cleanPath := filepath.Clean(path)
 	for _, dir := range c.AllowedDirectories {
-		// Use HasPrefix with an extra separator to ensure we're matching complete path segments
-		if filepath.HasPrefix(cleanPath, dir+string(filepath.Separator)) || cleanPath == dir {
+		if cleanPath == dir {
+			return true
+		}
+
+		dirWithSep := dir + string(filepath.Separator)
+		rel := filepath.Clean(cleanPath[len(dirWithSep):])
+		if len(cleanPath) > len(dirWithSep) &&
+			cleanPath[:len(dirWithSep)] == dirWithSep &&
+			!filepath.IsAbs(rel) {
 			return true
 		}
 	}
