@@ -1,6 +1,6 @@
 scripts:
-  go: kool docker --volume=kool_gopath:/go --env='GOOS=$GOOS' golang:1.24 go
-  go:linux: kool docker --volume=kool_gopath:/go golang:1.24 go
+  go: kool docker --volume=kool_gopath:/go --env='GOOS=$GOOS' golang:1.24.2 go
+  go:linux: kool docker --volume=kool_gopath:/go golang:1.24.2 go
   compile:
     - kool run fmt
     - kool run go build -buildvcs=false -o go-filesystem-mcp
