@@ -21,7 +21,6 @@ func ReadMultipleFilesHandler(ctx context.Context, request mcp.CallToolRequest) 
 	errChan := make(chan error, len(pathsInterface))
 	var castingWg sync.WaitGroup
 
-	// Process paths concurrently
 	for i, p := range pathsInterface {
 		castingWg.Add(1)
 		go func(index int, path interface{}) {
@@ -35,11 +34,9 @@ func ReadMultipleFilesHandler(ctx context.Context, request mcp.CallToolRequest) 
 		}(i, p)
 	}
 
-	// Wait for all goroutines to finish
 	castingWg.Wait()
 	close(errChan)
 
-	// Check for any errors
 	if err := <-errChan; err != nil {
 		return nil, err
 	}

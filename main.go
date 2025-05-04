@@ -44,6 +44,7 @@ func addTools(s *server.MCPServer, cfg *config.Config) {
 	addReadFileTool(s, cfg)
 	addReadMultipleFilesTool(s, cfg)
 	addCreateDirectoryTool(s, cfg)
+	addListDirectoryTool(s, cfg)
 }
 
 func addReadFileTool(s *server.MCPServer, cfg *config.Config) {
@@ -100,4 +101,19 @@ func addCreateDirectoryTool(s *server.MCPServer, cfg *config.Config) {
 
 	handler := tool.NewCreateDirectoryHandler(cfg)
 	s.AddTool(createDirTool, handler.Handle)
+}
+
+func addListDirectoryTool(s *server.MCPServer, cfg *config.Config) {
+	listDirectoryTool := mcp.NewTool(
+		"list_directory",
+		mcp.WithDescription("Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories."),
+		mcp.WithString(
+			"path",
+			mcp.Required(),
+			mcp.Description("The path to list contents of. Must be an absolute path to a directory that exists on the filesystem."),
+		),
+	)
+
+	handler := tool.NewListDirectoryHandler(cfg)
+	s.AddTool(listDirectoryTool, handler.Handle)
 }
