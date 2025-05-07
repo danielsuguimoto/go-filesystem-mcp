@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22.1-alpine3.19 AS builder
+FROM golang:1.24.2-alpine3.21 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o go-filesystem-mcp .
 
 # Final stage
-FROM alpine:3.19
+FROM alpine:3.21
 
 # Install ca-certificates for HTTPS requests
 RUN apk --no-cache add ca-certificates
